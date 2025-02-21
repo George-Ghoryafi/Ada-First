@@ -79,6 +79,7 @@ procedure Ascii_Test is
       
       -- Using Input to store the user's input to allow them to move the avatar
       Input : Character;     
+      Score : Integer := 0; -- Keeping track of the user's score
 
       package Random is new Ada.Numerics.Discrete_Random (Integer); 
       Gen : Random.Generator;
@@ -92,6 +93,8 @@ procedure Ascii_Test is
          -- Can now generate the box with the Avatar in it
          -- Note to self :: Box generation is here, no need to call it again in the main procedure
          Put(Make_Box(Width, Height, Avatar, Avatar_Row, Avatar_Col, Food_Row, Food_Col, Food_Char));
+
+         Put_Line("Current Score: " & Score'Image); -- Display the user's current score
 
          -- Now we need to ask the user what move they want to make, read the result, and store in Input
          Put("Enter a move (w/a/s/d), or q to quit: ");
@@ -117,20 +120,21 @@ procedure Ascii_Test is
                   Avatar_Col := Avatar_Col + 1;
                end if;
             when 'q' =>
+               Put("FInal Score: " & Score'Image);
                exit;
             when others =>
                Put_Line("Invalid move. Please enter w, a, s, d to make a move on the board, or q to exit.");
             end case; 
 
+               -- Checking if Avatar and Food overlap (if they do, we need to move the food and find it a new home)
                if Avatar_Row = Food_Row and Avatar_Col = Food_Col then
-
                   -- Using the random number generator and a generator Object we got before, we get the food's new position
                   Food_Row := Random.Random(Gen, 2, Height - 1);
                   Food_Col := Random.Random(Gen, 2, Width - 1);
+                  Score := Score + 1; -- Increment the score
                end if;            
          end loop; 
    end Handle_Moves;
-
 begin
    -- Simply call handle moves to start the game (it takes care of the drawing as well)
    Handle_Moves;
