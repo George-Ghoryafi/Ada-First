@@ -1,11 +1,12 @@
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Numerics.Discrete_Random;
 
 procedure Ascii_Test is
    Dashed : constant Character := '-';
    Line : constant Character := '|';
 
    -- Most annoying thing I have found -- Semi colon, not commas...
-   function Make_Box (Width : Integer; Height : Integer; Avatar: Character; Avatar_Row: Integer; Avatar_Col: Integer) return String is
+   function Make_Box (Width : Integer; Height : Integer; Avatar: Character; Avatar_Row: Integer; Avatar_Col: Integer; Food_Row: Integer; Food_Col: Integer; Food_Char: Character) return String is
       -- The total size of the box string (including newlines)
       Box_Length : constant Integer := (Width + 1) * Height; -- +1 for newline
       Result : String (1 .. Box_Length); -- Fixed-length string to store the box
@@ -35,6 +36,9 @@ procedure Ascii_Test is
                if Row = Avatar_Row and Col = Avatar_Col then 
                   -- If we're at the Avatar's position, add the Avatar to the box
                   Result(Index) := Avatar;
+               elsif Row = Food_Row and Col = Food_Col then
+                  -- If we're at the Food's position, add the Food to the box
+                  Result(Index) := Food_Char;
                else
                   -- Otherwise, add a space
                   Result(Index) := ' '; 
@@ -58,26 +62,36 @@ procedure Ascii_Test is
    end Make_Box;
 
    procedure Handle_Moves is 
-      -- Creating our paramters for the box
+      -- (CONSTANTS) Creating our paramters for the box
       Width : constant Integer := 20;
       Height : constant Integer := 10;
       Avatar : constant Character := '@';
-
+      Food_Char : constant Character := '*';
+      
+      
       -- Avatar's Initial Position
       Avatar_Row : Integer := 5;
       Avatar_Col : Integer := 10; 
 
-      -- Using this to store the user's input to allow them to move the avatar
-      Input : Character;      
+      -- Food's Initial Position
+      Food_Row : Integer := 5;
+      Food_Col : Integer := 5;
+      
+      -- Using Input to store the user's input to allow them to move the avatar
+      Input : Character;     
+
+      package Random is new Ada.Numerics.Discrete_Random (Integer); 
+      Gen : Random.Generator;
 
    begin
          loop 
          -- We start by clearing the screen of any previous boxes (Basically just adding a new line for clarity)
+         -- I want to change this to clearing the terminal entirely, couldn't find anything online about that though
          Put_Line(""); 
 
          -- Can now generate the box with the Avatar in it
          -- Note to self :: Box generation is here, no need to call it again in the main procedure
-         Put(Make_Box(Width, Height, Avatar, Avatar_Row, Avatar_Col));
+         Put(Make_Box(Width, Height, Avatar, Avatar_Row, Avatar_Col, Food_Row, Food_Col, Food_Char));
 
          -- Now we need to ask the user what move they want to make, read the result, and store in Input
          Put("Enter a move (w/a/s/d), or q to quit: ");
@@ -107,12 +121,17 @@ procedure Ascii_Test is
             when others =>
                Put_Line("Invalid move. Please enter w, a, s, d to make a move on the board, or q to exit.");
             end case; 
+
+               if Avatar_Row = Food_Row and Avatar_Col = Food_Col then
+
+                  -- Using the random number generator and a generator Object we got before, we get the food's new position
+                  Food_Row := Random.Random(Gen, 2, Height - 1);
+                  Food_Col := Random.Random(Gen, 2, Width - 1);
+               end if;            
          end loop; 
    end Handle_Moves;
 
 begin
-   begin
-      -- Simply call handle moves to start the game (it takes care of the drawing as well)
-      Handle_Moves;
-   end;
+   -- Simply call handle moves to start the game (it takes care of the drawing as well)
+   Handle_Moves;
 end Ascii_Test;
